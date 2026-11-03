@@ -29,8 +29,46 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/MeetingType'
+  /api/meeting-types/{meetingTypeId}/slots:
+    get:
+      operationId: listSlots
+      description: Свободные слоты выбранного типа встречи на окно записи (14 дней с завтрашнего).
+      parameters:
+        - name: meetingTypeId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Slot'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
 components:
   schemas:
+    ApiError:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          description: Машиночитаемый код ошибки.
+        message:
+          type: string
+          description: Сообщение для показа гостю.
+      description: 'Ошибка API: машинный код и человекочитаемое сообщение.'
     HealthResponse:
       type: object
       required:
@@ -61,6 +99,21 @@ components:
           format: int32
           description: Длительность встречи в минутах.
       description: Тип встречи, который гость может забронировать.
+    Slot:
+      type: object
+      required:
+        - start
+        - end
+      properties:
+        start:
+          type: string
+          format: date-time
+          description: Начало слота (включительно), UTC.
+        end:
+          type: string
+          format: date-time
+          description: Конец слота (исключительно), UTC.
+      description: 'Свободный слот: полуоткрытый интервал [start, end) во времени UTC.'
 servers:
   - url: http://localhost:8080
     description: Local development

@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { GetHealthData, GetHealthResponses, ListMeetingTypesData, ListMeetingTypesResponses } from './types.gen';
+import type { GetHealthData, GetHealthResponses, ListMeetingTypesData, ListMeetingTypesResponses, ListSlotsData, ListSlotsErrors, ListSlotsResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -24,3 +24,8 @@ export const getHealth = <ThrowOnError extends boolean = false>(options?: Option
  * Список типов встреч, доступных для записи.
  */
 export const listMeetingTypes = <ThrowOnError extends boolean = false>(options?: Options<ListMeetingTypesData, ThrowOnError>): RequestResult<ListMeetingTypesResponses, unknown, ThrowOnError> => (options?.client ?? client).get<ListMeetingTypesResponses, unknown, ThrowOnError>({ url: '/api/meeting-types', ...options });
+
+/**
+ * Свободные слоты выбранного типа встречи на окно записи (14 дней с завтрашнего).
+ */
+export const listSlots = <ThrowOnError extends boolean = false>(options: Options<ListSlotsData, ThrowOnError>): RequestResult<ListSlotsResponses, ListSlotsErrors, ThrowOnError> => (options.client ?? client).get<ListSlotsResponses, ListSlotsErrors, ThrowOnError>({ url: '/api/meeting-types/{meetingTypeId}/slots', ...options });

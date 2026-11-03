@@ -5,6 +5,20 @@ export type ClientOptions = {
 };
 
 /**
+ * Ошибка API: машинный код и человекочитаемое сообщение.
+ */
+export type ApiError = {
+    /**
+     * Машиночитаемый код ошибки.
+     */
+    code: string;
+    /**
+     * Сообщение для показа гостю.
+     */
+    message: string;
+};
+
+/**
  * Проверка живости сервиса.
  */
 export type HealthResponse = {
@@ -31,6 +45,20 @@ export type MeetingType = {
      * Длительность встречи в минутах.
      */
     durationMinutes: number;
+};
+
+/**
+ * Свободный слот: полуоткрытый интервал [start, end) во времени UTC.
+ */
+export type Slot = {
+    /**
+     * Начало слота (включительно), UTC.
+     */
+    start: string;
+    /**
+     * Конец слота (исключительно), UTC.
+     */
+    end: string;
 };
 
 export type GetHealthData = {
@@ -64,3 +92,30 @@ export type ListMeetingTypesResponses = {
 };
 
 export type ListMeetingTypesResponse = ListMeetingTypesResponses[keyof ListMeetingTypesResponses];
+
+export type ListSlotsData = {
+    body?: never;
+    path: {
+        meetingTypeId: string;
+    };
+    query?: never;
+    url: '/api/meeting-types/{meetingTypeId}/slots';
+};
+
+export type ListSlotsErrors = {
+    /**
+     * The server cannot find the requested resource.
+     */
+    404: ApiError;
+};
+
+export type ListSlotsError = ListSlotsErrors[keyof ListSlotsErrors];
+
+export type ListSlotsResponses = {
+    /**
+     * The request has succeeded.
+     */
+    200: Array<Slot>;
+};
+
+export type ListSlotsResponse = ListSlotsResponses[keyof ListSlotsResponses];
