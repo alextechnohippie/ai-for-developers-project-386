@@ -44,6 +44,9 @@ private fun Route.calendarRoutes(clock: Clock, store: BookingStore) {
     get("/meeting-types/{meetingTypeId}/slots") {
         respondSlots(clock, store)
     }
+    get("/bookings") {
+        call.respond(store.list())
+    }
     post("/bookings") {
         respondBooking(clock, store)
     }

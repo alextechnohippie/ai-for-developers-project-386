@@ -19,6 +19,11 @@ class BookingStore {
         bookings.map { Interval(Instant.parse(it.start), Instant.parse(it.end)) }
     }
 
+    /** Все записи, отсортированные по времени начала (ISO-8601 UTC сортируется как хронология). */
+    suspend fun list(): List<Booking> = mutex.withLock {
+        bookings.sortedBy { it.start }
+    }
+
     /**
      * Атомарно проверяет конфликт и добавляет запись. Возвращает `true`, если запись
      * создана, и `false`, если интервал пересекается с уже существующей бронью любого типа.

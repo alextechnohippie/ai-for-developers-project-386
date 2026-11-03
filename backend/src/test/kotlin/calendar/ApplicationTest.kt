@@ -222,6 +222,25 @@ class ApplicationTest {
         assertEquals(1, statuses.count { it == HttpStatusCode.Created })
         assertEquals(1, statuses.count { it == HttpStatusCode.Conflict })
     }
+
+    @Test
+    fun `GET api bookings lists all bookings sorted by start`() = testApplication {
+        application { module(FIXED_CLOCK) }
+
+        // Создаём в обратном порядке и для разных типов.
+        client.book("consultation", "2026-11-05T07:00:00Z", "Борис")
+        client.book("introduction", "2026-11-05T06:00:00Z", "Анна")
+
+        val response = client.get("/api/bookings")
+
+        assertEquals(HttpStatusCode.OK, response.status)
+        assertEquals(ContentType.Application.Json, response.contentType()?.withoutParameters())
+
+        val bookings = Json.decodeFromString<List<Booking>>(response.bodyAsText())
+        assertEquals(listOf("2026-11-05T06:00:00Z", "2026-11-05T07:00:00Z"), bookings.map { it.start })
+        assertEquals(listOf("introduction", "consultation"), bookings.map { it.meetingTypeId })
+        assertEquals(listOf("Анна", "Борис"), bookings.map { it.guestName })
+    }
 }
 
 private suspend fun HttpResponse.slots(): List<Slot> = Json.decodeFromString(bodyAsText())
