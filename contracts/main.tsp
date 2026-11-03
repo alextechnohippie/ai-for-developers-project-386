@@ -96,6 +96,11 @@ op listSlots(@path meetingTypeId: string):
       @body error: ApiError;
     };
 
+/** Все записи владельца, отсортированные по времени начала (по возрастанию). */
+@get
+@route("/api/bookings")
+op listBookings(): Booking[];
+
 /** Создать запись на свободный слот. Сервер проверяет легальность старта и конфликт. */
 @post
 @route("/api/bookings")

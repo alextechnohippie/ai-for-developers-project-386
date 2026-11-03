@@ -5,6 +5,19 @@ info:
 tags: []
 paths:
   /api/bookings:
+    get:
+      operationId: listBookings
+      description: Все записи владельца, отсортированные по времени начала (по возрастанию).
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Booking'
     post:
       operationId: createBooking
       description: Создать запись на свободный слот. Сервер проверяет легальность старта и конфликт.
