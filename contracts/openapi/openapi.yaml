@@ -15,6 +15,20 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HealthResponse'
+  /api/meeting-types:
+    get:
+      operationId: listMeetingTypes
+      description: Список типов встреч, доступных для записи.
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MeetingType'
 components:
   schemas:
     HealthResponse:
@@ -25,6 +39,28 @@ components:
         status:
           type: string
       description: Проверка живости сервиса.
+    MeetingType:
+      type: object
+      required:
+        - id
+        - title
+        - description
+        - durationMinutes
+      properties:
+        id:
+          type: string
+          description: Стабильный идентификатор типа.
+        title:
+          type: string
+          description: Название, видимое гостю.
+        description:
+          type: string
+          description: Короткое описание формата встречи.
+        durationMinutes:
+          type: integer
+          format: int32
+          description: Длительность встречи в минутах.
+      description: Тип встречи, который гость может забронировать.
 servers:
   - url: http://localhost:8080
     description: Local development

@@ -11,6 +11,28 @@ export type HealthResponse = {
     status: string;
 };
 
+/**
+ * Тип встречи, который гость может забронировать.
+ */
+export type MeetingType = {
+    /**
+     * Стабильный идентификатор типа.
+     */
+    id: string;
+    /**
+     * Название, видимое гостю.
+     */
+    title: string;
+    /**
+     * Короткое описание формата встречи.
+     */
+    description: string;
+    /**
+     * Длительность встречи в минутах.
+     */
+    durationMinutes: number;
+};
+
 export type GetHealthData = {
     body?: never;
     path?: never;
@@ -26,3 +48,19 @@ export type GetHealthResponses = {
 };
 
 export type GetHealthResponse = GetHealthResponses[keyof GetHealthResponses];
+
+export type ListMeetingTypesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/meeting-types';
+};
+
+export type ListMeetingTypesResponses = {
+    /**
+     * The request has succeeded.
+     */
+    200: Array<MeetingType>;
+};
+
+export type ListMeetingTypesResponse = ListMeetingTypesResponses[keyof ListMeetingTypesResponses];
