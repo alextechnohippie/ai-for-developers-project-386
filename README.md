@@ -10,20 +10,30 @@
 
 ## Стек
 
-- Разное
+- Окружение и задачи: **mise** (Java 21, Node 24)
+- Контракт API: **TypeSpec → OpenAPI 3.0.0**, клиентский SDK — `@hey-api/openapi-ts`
+- Бэкенд: **Kotlin + Ktor** (Gradle)
+- Фронтенд: **React + TypeScript + Vite**
+- Проверки: detekt, Oxlint + oxfmt, Vitest/JUnit; git-хуки — hk; CI — GitHub Actions
 
 ## Установка
-
-<!-- Опишите установку: клонирование, зависимости, переменные окружения -->
 
 ```bash
 git clone https://github.com/alextechnohippie/ai-for-developers-project-386.git
 cd ai-for-developers-project-386
+mise install        # инструменты (Java, Node, hk)
+mise run install    # npm-зависимости
 ```
 
 ## Использование
 
-<!-- Добавьте примеры запуска и запись asciinema — именно это смотрит работодатель -->
+```bash
+mise run dev:backend    # Ktor на http://localhost:8080
+mise run dev:frontend   # Vite на http://localhost:5173 (проксирует /api)
+mise run check          # все проверки (линт, типы, тесты, сборка)
+```
+
+Рабочие команды и правила проекта — в [AGENTS.md](AGENTS.md).
 
 ---
 
