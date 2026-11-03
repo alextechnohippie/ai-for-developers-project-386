@@ -1,6 +1,13 @@
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { type FormEvent, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import "./App.css";
-import { listMeetingTypes, listSlots, type MeetingType, type Slot } from "./api/generated";
+import {
+  type Booking,
+  createBooking,
+  listMeetingTypes,
+  listSlots,
+  type MeetingType,
+  type Slot,
+} from "./api/generated";
 
 const BOOKING_ZONE = "Europe/Moscow";
 const dayFormat = new Intl.DateTimeFormat("ru-RU", {
@@ -13,6 +20,15 @@ const timeFormat = new Intl.DateTimeFormat("ru-RU", {
   hour: "2-digit",
   minute: "2-digit",
 });
+
+function formatTime(iso: string): string {
+  return timeFormat.format(new Date(iso));
+}
+
+function formatDateTime(iso: string): string {
+  const date = new Date(iso);
+  return `${dayFormat.format(date)}, ${timeFormat.format(date)}`;
+}
 
 function groupByDay(slots: Slot[]): [string, Slot[]][] {
   const groups = new Map<string, Slot[]>();
@@ -30,17 +46,141 @@ function subscribeToLocation(onChange: () => void) {
   return () => window.removeEventListener("hashchange", onChange);
 }
 
+function BookingView({ meeting }: { meeting: MeetingType }) {
+  const heading = useRef<HTMLHeadingElement>(null);
+  const [slots, setSlots] = useState<Slot[] | null>(null);
+  const [reloadToken, setReloadToken] = useState(0);
+  const [selectedStart, setSelectedStart] = useState<string | null>(null);
+  const [guestName, setGuestName] = useState("");
+  const [confirmation, setConfirmation] = useState<Booking | null>(null);
+  const [bookingError, setBookingError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    heading.current?.focus();
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    listSlots({ path: { meetingTypeId: meeting.id } }).then(({ data }) => {
+      if (active && data) {
+        setSlots(data);
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, [meeting.id, reloadToken]);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!selectedStart) {
+      return;
+    }
+    setSubmitting(true);
+    setBookingError(null);
+    const { data, error } = await createBooking({
+      body: { meetingTypeId: meeting.id, start: selectedStart, guestName },
+    });
+    setSubmitting(false);
+    if (data) {
+      setConfirmation(data);
+      setSelectedStart(null);
+      setGuestName("");
+    } else {
+      setBookingError(error?.message ?? "Не удалось создать запись. Попробуйте ещё раз.");
+    }
+    // Перечитать слоты: занятое время должно исчезнуть, конфликтное — обновиться.
+    setReloadToken((token) => token + 1);
+  }
+
+  return (
+    <>
+      <h1 ref={heading} tabIndex={-1}>
+        {meeting.title}
+      </h1>
+      {confirmation ? (
+        <div className="confirmation">
+          <p className="success">Готово! Вы записаны.</p>
+          <p>
+            {meeting.title} — {formatDateTime(confirmation.start)} МСК
+          </p>
+          <p>Имя гостя: {confirmation.guestName}</p>
+        </div>
+      ) : (
+        <>
+          <p className="duration">{meeting.durationMinutes} минут</p>
+          <section aria-label="Свободное время">
+            {slots === null ? (
+              <p className="loading">Загружаем свободное время…</p>
+            ) : slots.length === 0 ? (
+              <p className="empty">Свободных слотов пока нет.</p>
+            ) : (
+              groupByDay(slots).map(([day, daySlots]) => (
+                <div className="slot-day" key={day}>
+                  <h2 className="slot-day-title">{day}</h2>
+                  <ul className="slot-times">
+                    {daySlots.map((slot) => (
+                      <li key={slot.start}>
+                        <button
+                          type="button"
+                          className={slot.start === selectedStart ? "slot slot-selected" : "slot"}
+                          aria-pressed={slot.start === selectedStart}
+                          onClick={() => {
+                            setSelectedStart(slot.start);
+                            setBookingError(null);
+                          }}
+                        >
+                          {formatTime(slot.start)}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))
+            )}
+          </section>
+          {selectedStart && (
+            <form className="booking-form" onSubmit={handleSubmit}>
+              <p className="chosen">Выбрано: {formatDateTime(selectedStart)} МСК</p>
+              <label htmlFor="guest-name">Ваше имя</label>
+              <input
+                id="guest-name"
+                className="name-input"
+                value={guestName}
+                onChange={(event) => setGuestName(event.target.value)}
+              />
+              {bookingError && (
+                <p className="form-error" role="alert">
+                  {bookingError}
+                </p>
+              )}
+              <div className="form-actions">
+                <button type="submit" className="button" disabled={submitting}>
+                  Записаться
+                </button>
+                <button type="button" className="secondary" onClick={() => setSelectedStart(null)}>
+                  Отмена
+                </button>
+              </div>
+            </form>
+          )}
+        </>
+      )}
+      <a className="back-link" href="#/">
+        Вернуться на главную
+      </a>
+    </>
+  );
+}
+
 function App() {
   const hash = useSyncExternalStore(subscribeToLocation, () => window.location.hash);
   const heading = useRef<HTMLHeadingElement>(null);
   const [meetingTypes, setMeetingTypes] = useState<MeetingType[] | null>(null);
-  const [slotsFor, setSlotsFor] = useState<{ id: string; slots: Slot[] } | null>(null);
   const isHome = hash === "" || hash === "#/";
   const isLoading = meetingTypes === null;
   const meeting = meetingTypes?.find((item) => hash === `#/book/${item.id}`);
-  const meetingId = meeting?.id;
-  // null, пока слоты для текущего типа ещё не загружены (или тип не выбран).
-  const slots = slotsFor && slotsFor.id === meetingId ? slotsFor.slots : null;
 
   useEffect(() => {
     let active = true;
@@ -55,25 +195,12 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (!meetingId) {
-      return;
-    }
-    let active = true;
-    listSlots({ path: { meetingTypeId: meetingId } }).then(({ data }) => {
-      if (active && data) {
-        setSlotsFor({ id: meetingId, slots: data });
-      }
-    });
-    return () => {
-      active = false;
-    };
-  }, [meetingId]);
-
-  useEffect(() => {
     document.title = isHome
       ? "Календарь звонков"
       : `${meeting?.title ?? "Страница не найдена"} — Календарь звонков`;
-    heading.current?.focus();
+    if (isHome || !meeting) {
+      heading.current?.focus();
+    }
   }, [hash, isHome, meeting]);
 
   if (!isHome) {
@@ -83,40 +210,14 @@ function App() {
         <section className="booking-card">
           {isLoading ? (
             <p className="loading">Загружаем типы встреч…</p>
+          ) : meeting ? (
+            <BookingView meeting={meeting} key={meeting.id} />
           ) : (
             <>
               <h1 ref={heading} tabIndex={-1}>
-                {meeting?.title ?? "Страница не найдена"}
+                Страница не найдена
               </h1>
-              {meeting ? (
-                <>
-                  <p className="duration">{meeting.durationMinutes} минут</p>
-                  <section aria-label="Свободное время">
-                    {slots === null ? (
-                      <p className="loading">Загружаем свободное время…</p>
-                    ) : slots.length === 0 ? (
-                      <p className="empty">Свободных слотов пока нет.</p>
-                    ) : (
-                      groupByDay(slots).map(([day, daySlots]) => (
-                        <div className="slot-day" key={day}>
-                          <h2 className="slot-day-title">{day}</h2>
-                          <ul className="slot-times">
-                            {daySlots.map((slot) => (
-                              <li key={slot.start}>
-                                <button type="button" className="slot">
-                                  {timeFormat.format(new Date(slot.start))}
-                                </button>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      ))
-                    )}
-                  </section>
-                </>
-              ) : (
-                <p>Проверьте ссылку или выберите тип встречи на главной.</p>
-              )}
+              <p>Проверьте ссылку или выберите тип встречи на главной.</p>
               <a className="back-link" href="#/">
                 Вернуться на главную
               </a>

@@ -4,7 +4,10 @@ import App from "./App";
 
 // Юнит-тест изолирован от бэкенда: сгенерированный SDK замокан. Реальную
 // связь фронт→бэк через контракт проверяет браузерный e2e (тикет #12).
-const { listSlotsMock } = vi.hoisted(() => ({ listSlotsMock: vi.fn() }));
+const { listSlotsMock, createBookingMock } = vi.hoisted(() => ({
+  listSlotsMock: vi.fn(),
+  createBookingMock: vi.fn(),
+}));
 
 vi.mock("./api/generated", () => ({
   listMeetingTypes: vi.fn(() =>
@@ -26,6 +29,7 @@ vi.mock("./api/generated", () => ({
     }),
   ),
   listSlots: listSlotsMock,
+  createBooking: createBookingMock,
 }));
 
 // 06:00Z / 06:30Z = 09:00 / 09:30 по Москве.
@@ -34,13 +38,23 @@ const SLOTS = [
   { start: "2026-11-05T06:30:00Z", end: "2026-11-05T07:00:00Z" },
 ];
 
+const BOOKING = {
+  id: "b-1",
+  meetingTypeId: "consultation",
+  start: "2026-11-05T06:00:00Z",
+  end: "2026-11-05T06:30:00Z",
+  guestName: "Аня",
+};
+
 beforeEach(() => {
   listSlotsMock.mockResolvedValue({ data: SLOTS });
+  createBookingMock.mockResolvedValue({ data: BOOKING });
 });
 
 afterEach(() => {
   cleanup();
   listSlotsMock.mockReset();
+  createBookingMock.mockReset();
   window.history.replaceState(null, "", "/");
 });
 
@@ -113,5 +127,31 @@ describe("Путь гостя", () => {
     window.history.replaceState(null, "", "/#/book/consultation");
     render(<App />);
     expect(await screen.findByText("Свободных слотов пока нет.")).toBeDefined();
+  });
+
+  it("создаёт запись и показывает подтверждение", async () => {
+    window.history.replaceState(null, "", "/#/book/consultation");
+    render(<App />);
+    fireEvent.click(await screen.findByRole("button", { name: "09:00" }));
+    fireEvent.change(screen.getByLabelText("Ваше имя"), { target: { value: "Аня" } });
+    fireEvent.click(screen.getByRole("button", { name: "Записаться" }));
+    expect(await screen.findByText("Готово! Вы записаны.")).toBeDefined();
+    expect(screen.getByText(/Аня/)).toBeDefined();
+  });
+
+  it("показывает понятное сообщение при конфликте слота", async () => {
+    createBookingMock.mockResolvedValueOnce({
+      error: {
+        code: "SLOT_TAKEN",
+        message: "Это время уже занято. Выберите другой свободный слот.",
+      },
+    });
+    window.history.replaceState(null, "", "/#/book/consultation");
+    render(<App />);
+    fireEvent.click(await screen.findByRole("button", { name: "09:00" }));
+    fireEvent.change(screen.getByLabelText("Ваше имя"), { target: { value: "Аня" } });
+    fireEvent.click(screen.getByRole("button", { name: "Записаться" }));
+    expect(await screen.findByRole("alert")).toBeDefined();
+    expect(screen.getByText(/уже занято/)).toBeDefined();
   });
 });
