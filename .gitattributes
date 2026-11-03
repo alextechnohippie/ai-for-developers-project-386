@@ -1,0 +1,16 @@
+# Нормализация переводов строк для кроссплатформенности (Windows ↔ Ubuntu CI).
+* text=auto eol=lf
+
+# Скрипты Gradle Wrapper обязаны быть с LF, иначе падают в Linux.
+gradlew text eol=lf
+*.sh text eol=lf
+
+# Windows-скрипты — CRLF.
+*.bat text eol=crlf
+gradlew.bat text eol=crlf
+
+# Бинарные артефакты — без нормализации.
+*.jar binary
+*.png binary
+*.jpg binary
+*.ico binary
