@@ -1,0 +1,3 @@
+# Локальные настройки Claude Code (персональные разрешения) — не коммитим.
+# Скиллы (.claude/skills/) и skills-lock.json, наоборот, коммитим.
+.claude/settings.local.json
