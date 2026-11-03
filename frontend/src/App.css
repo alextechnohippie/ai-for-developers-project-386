@@ -89,9 +89,39 @@
   font-size: clamp(1.8rem, 5vw, 2.6rem);
   margin-bottom: 20px;
 }
-.placeholder-message {
-  font-size: 1.2rem;
+.slot-day {
   margin-top: 28px;
+}
+.slot-day-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+.slot-times {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 0;
+  margin: 0;
+}
+.slot {
+  padding: 10px 16px;
+  background: #edf3ff;
+  color: #2457ce;
+  border: 1px solid #cfdcf7;
+  border-radius: 9px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+.slot:hover {
+  background: #dfeaff;
+}
+.empty,
+.loading {
+  color: #627089;
+  margin-top: 24px;
 }
 .back-link {
   display: inline-block;

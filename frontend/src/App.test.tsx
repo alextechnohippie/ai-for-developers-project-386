@@ -1,9 +1,11 @@
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
 
 // Юнит-тест изолирован от бэкенда: сгенерированный SDK замокан. Реальную
 // связь фронт→бэк через контракт проверяет браузерный e2e (тикет #12).
+const { listSlotsMock } = vi.hoisted(() => ({ listSlotsMock: vi.fn() }));
+
 vi.mock("./api/generated", () => ({
   listMeetingTypes: vi.fn(() =>
     Promise.resolve({
@@ -23,10 +25,22 @@ vi.mock("./api/generated", () => ({
       ],
     }),
   ),
+  listSlots: listSlotsMock,
 }));
+
+// 06:00Z / 06:30Z = 09:00 / 09:30 по Москве.
+const SLOTS = [
+  { start: "2026-11-05T06:00:00Z", end: "2026-11-05T06:30:00Z" },
+  { start: "2026-11-05T06:30:00Z", end: "2026-11-05T07:00:00Z" },
+];
+
+beforeEach(() => {
+  listSlotsMock.mockResolvedValue({ data: SLOTS });
+});
 
 afterEach(() => {
   cleanup();
+  listSlotsMock.mockReset();
   window.history.replaceState(null, "", "/");
 });
 
@@ -55,7 +69,7 @@ describe("Путь гостя", () => {
   it.each([
     ["Знакомство", "15 минут"],
     ["Консультация", "30 минут"],
-  ])("переходит к записи на %s и возвращается", async (name, duration) => {
+  ])("переходит к записи на %s и видит свободное время", async (name, duration) => {
     render(<App />);
     fireEvent.click(
       within(await screen.findByRole("article", { name })).getByRole("link", {
@@ -64,7 +78,7 @@ describe("Путь гостя", () => {
     );
     expect(await screen.findByRole("heading", { name, level: 1 })).toBeDefined();
     expect(screen.getByText(duration)).toBeDefined();
-    expect(screen.getByText("Онлайн-запись скоро появится")).toBeDefined();
+    expect(await screen.findByRole("button", { name: "09:00" })).toBeDefined();
     fireEvent.click(screen.getByRole("link", { name: "Вернуться на главную" }));
     expect(
       await screen.findByRole("heading", { name: "Календарь звонков", level: 1 }),
@@ -83,5 +97,20 @@ describe("Путь гостя", () => {
     const consultation = screen.getByRole("article", { name: "Консультация" });
     expect(within(consultation).getByText("30 минут")).toBeDefined();
     expect(within(consultation).getByRole("link", { name: "Выбрать время" })).toBeDefined();
+  });
+
+  it("показывает свободные слоты выбранного типа, сгруппированные по дню", async () => {
+    window.history.replaceState(null, "", "/#/book/consultation");
+    render(<App />);
+    expect(await screen.findByRole("button", { name: "09:00" })).toBeDefined();
+    expect(screen.getByRole("button", { name: "09:30" })).toBeDefined();
+    expect(screen.getByText("5 ноября")).toBeDefined();
+  });
+
+  it("сообщает, когда свободных слотов нет", async () => {
+    listSlotsMock.mockResolvedValueOnce({ data: [] });
+    window.history.replaceState(null, "", "/#/book/consultation");
+    render(<App />);
+    expect(await screen.findByText("Свободных слотов пока нет.")).toBeDefined();
   });
 });
