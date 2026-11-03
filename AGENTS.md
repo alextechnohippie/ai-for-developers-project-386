@@ -16,8 +16,11 @@
 | `mise run fmt` | Автоисправление формата и линта |
 | `mise run dev:backend` | Ktor на http://localhost:8080 |
 | `mise run dev:frontend` | Vite на http://localhost:5173 (проксирует `/api` на :8080) |
+| `mise run e2e` | Браузерный e2e (Playwright) на живом стеке; **не входит** в `check` |
+| `mise run e2e:install` | Зависимости e2e; браузер — `cd e2e && npx playwright install chromium` |
 
-CI (`.github/workflows/ci.yml`) на каждый push выполняет `mise run install` + `mise run check`.
+CI (`.github/workflows/ci.yml`) на каждый push выполняет `mise run install` + `mise run check`
+(job `check`) и отдельным job `e2e` — браузерный сценарий на живом стеке.
 
 ## Устройство
 

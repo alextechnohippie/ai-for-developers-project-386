@@ -11,6 +11,12 @@ export default defineConfig({
       "/api": "http://localhost:8080",
     },
   },
+  preview: {
+    // Тот же прокси для `vite preview` — собранный фронт в e2e ходит на живой Ktor.
+    proxy: {
+      "/api": "http://localhost:8080",
+    },
+  },
   test: {
     environment: "jsdom",
     include: ["src/**/*.test.{ts,tsx}"],

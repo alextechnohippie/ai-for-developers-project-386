@@ -1,0 +1,12 @@
+{
+  "name": "calendar-e2e",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Браузерный e2e (Playwright) сервиса «Календарь звонков»",
+  "scripts": {
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1"
+  }
+}

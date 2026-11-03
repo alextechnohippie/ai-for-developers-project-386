@@ -160,3 +160,20 @@ run = [
   "mise run frontend:lint-fix",
   "mise run backend:format",
 ]
+
+# ---------------------------------------------------------------------------
+# Браузерный e2e (Playwright). Отдельно от check — поднимает живой стек.
+# ---------------------------------------------------------------------------
+
+[tasks."e2e:install"]
+description = "Ставит зависимости e2e (Playwright). Браузер: npx playwright install chromium"
+dir = "e2e"
+run = "npm ci"
+
+[tasks.e2e]
+description = "Браузерный e2e на живом стеке (Ktor + собранный фронт). НЕ входит в mise run check"
+dir = "e2e"
+run = [
+  "mise run frontend:build",
+  "npx playwright test",
+]
