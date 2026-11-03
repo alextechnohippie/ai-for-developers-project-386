@@ -14,6 +14,16 @@ data class Slot(val start: String, val end: String)
 /** Занятый интервал [start, end) — например, уже созданная бронь. */
 data class Interval(val start: Instant, val end: Instant)
 
+/**
+ * Пересекаются ли полуоткрытые интервалы [aStart, aEnd) и [bStart, bEnd).
+ * Примыкание (конец одного = начало другого) пересечением не считается.
+ */
+fun intervalsOverlap(aStart: Instant, aEnd: Instant, bStart: Instant, bEnd: Instant): Boolean =
+    aStart.isBefore(bEnd) && bStart.isBefore(aEnd)
+
+/** Форматирует момент времени в ISO-8601 UTC (например, 2026-11-05T06:00:00Z). */
+fun toIsoInstant(instant: Instant): String = DateTimeFormatter.ISO_INSTANT.format(instant)
+
 /** Таймзона рабочих часов владельца (T1). Europe/Moscow = UTC+3, без переходов на лето. */
 val MOSCOW_ZONE: ZoneId = ZoneId.of("Europe/Moscow")
 
@@ -49,17 +59,12 @@ object Slots {
             var start = day.atTime(workStart).atZone(zone).toInstant()
             while (!start.plus(duration).isAfter(dayEnd)) {
                 val end = start.plus(duration)
-                if (occupied.none { overlaps(start, end, it.start, it.end) }) {
-                    slots.add(Slot(start = format(start), end = format(end)))
+                if (occupied.none { intervalsOverlap(start, end, it.start, it.end) }) {
+                    slots.add(Slot(start = toIsoInstant(start), end = toIsoInstant(end)))
                 }
                 start = end
             }
         }
         return slots
     }
-
-    private fun overlaps(aStart: Instant, aEnd: Instant, bStart: Instant, bEnd: Instant): Boolean =
-        aStart.isBefore(bEnd) && bStart.isBefore(aEnd)
-
-    private fun format(instant: Instant): String = DateTimeFormatter.ISO_INSTANT.format(instant)
 }
