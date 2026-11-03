@@ -1,19 +1,19 @@
-import { useEffect, useState } from 'react'
-import { getHealth } from './api/generated'
-import './App.css'
+import { useEffect, useState } from "react";
+import { getHealth } from "./api/generated";
+import "./App.css";
 
 function App() {
-  const [status, setStatus] = useState('…')
+  const [status, setStatus] = useState("…");
 
   useEffect(() => {
     getHealth()
       .then(({ data, error }) => {
-        setStatus(error ? 'error' : (data?.status ?? 'unknown'))
+        setStatus(error ? "error" : (data?.status ?? "unknown"));
       })
       .catch(() => {
-        setStatus('error')
-      })
-  }, [])
+        setStatus("error");
+      });
+  }, []);
 
   return (
     <main>
@@ -22,7 +22,7 @@ function App() {
         Backend health: <strong data-testid="health-status">{status}</strong>
       </p>
     </main>
-  )
+  );
 }
 
-export default App
+export default App;

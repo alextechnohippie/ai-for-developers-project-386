@@ -2,6 +2,7 @@ plugins {
     kotlin("jvm") version "2.2.20"
     kotlin("plugin.serialization") version "2.2.20"
     id("io.ktor.plugin") version "3.6.1"
+    id("io.gitlab.arturbosch.detekt") version "1.23.8"
     application
 }
 
@@ -26,6 +27,8 @@ dependencies {
 
     testImplementation("io.ktor:ktor-server-test-host")
     testImplementation(kotlin("test"))
+
+    detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.23.8")
 }
 
 kotlin {
@@ -33,6 +36,10 @@ kotlin {
     compilerOptions {
         allWarningsAsErrors.set(true)
     }
+}
+
+detekt {
+    buildUponDefaultConfig = true
 }
 
 tasks.test {
