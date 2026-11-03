@@ -1,8 +1,162 @@
 # Окружение разработки проекта «Календарь звонков».
 # Версии закреплены для воспроизводимости: одно и то же локально и в CI.
-# Gradle запускаем через Wrapper (./gradlew), npm-инструменты — через package.json.
-# hk (git-хуки) добавим на шаге настройки проверок.
+# Gradle запускаем через Wrapper напрямую (java -classpath ... GradleWrapperMain),
+# это работает одинаково в Windows PowerShell/cmd и в Ubuntu CI — без ./gradlew/.bat.
+# npm-инструменты — через package.json соответствующего пакета.
 
 [tools]
 java = "temurin-21.0.13+9.0.LTS"
 node = "24.22.2"
+hk = "2.11.0"
+
+# ---------------------------------------------------------------------------
+# Установка зависимостей (для свежего клона и CI; Gradle тянет своё сам).
+# ---------------------------------------------------------------------------
+
+[tasks."contract:install"]
+dir = "contracts"
+run = "npm ci"
+
+[tasks."frontend:install"]
+dir = "frontend"
+run = "npm ci"
+
+[tasks.install]
+description = "Устанавливает npm-зависимости (contracts, frontend)"
+run = [
+  "mise run contract:install",
+  "mise run frontend:install",
+]
+
+# ---------------------------------------------------------------------------
+# Атомарные задачи (каждая со своим рабочим каталогом).
+# ---------------------------------------------------------------------------
+
+[tasks."contract:build"]
+description = "Компилирует TypeSpec → openapi.yaml"
+dir = "contracts"
+run = "npm run build"
+
+[tasks."contract:format-check"]
+description = "Проверка форматирования .tsp"
+dir = "contracts"
+run = "npm run format:check"
+
+[tasks."contract:format"]
+description = "Форматирует .tsp (fix)"
+dir = "contracts"
+run = "npm run format"
+
+[tasks."sdk:generate"]
+description = "Генерирует TS SDK из openapi.yaml"
+dir = "frontend"
+run = "npm run generate:sdk"
+
+[tasks."backend:check"]
+description = "detekt + тесты бэкенда"
+dir = "backend"
+run = "java -classpath gradle/wrapper/gradle-wrapper.jar org.gradle.wrapper.GradleWrapperMain detekt test --console=plain"
+
+[tasks."backend:lint"]
+description = "Только detekt (без тестов) — для быстрой проверки"
+dir = "backend"
+run = "java -classpath gradle/wrapper/gradle-wrapper.jar org.gradle.wrapper.GradleWrapperMain detekt --console=plain"
+
+[tasks."backend:format"]
+description = "detekt --auto-correct (fix)"
+dir = "backend"
+run = "java -classpath gradle/wrapper/gradle-wrapper.jar org.gradle.wrapper.GradleWrapperMain detekt --auto-correct --console=plain"
+
+[tasks."frontend:lint"]
+description = "oxlint"
+dir = "frontend"
+run = "npm run lint"
+
+[tasks."frontend:lint-fix"]
+description = "oxlint --fix (fix)"
+dir = "frontend"
+run = "npm run lint:fix"
+
+[tasks."frontend:format-check"]
+description = "oxfmt --check"
+dir = "frontend"
+run = "npm run format:check"
+
+[tasks."frontend:format"]
+description = "oxfmt (fix)"
+dir = "frontend"
+run = "npm run format"
+
+[tasks."frontend:typecheck"]
+description = "tsc -b (только проверка типов)"
+dir = "frontend"
+run = "npm run typecheck"
+
+[tasks."frontend:build"]
+description = "tsc -b + vite build"
+dir = "frontend"
+run = "npm run build"
+
+[tasks."frontend:test"]
+description = "vitest run"
+dir = "frontend"
+run = "npm run test"
+
+# ---------------------------------------------------------------------------
+# Dev-серверы.
+# ---------------------------------------------------------------------------
+
+[tasks."dev:backend"]
+description = "Ktor на http://localhost:8080"
+dir = "backend"
+run = "java -classpath gradle/wrapper/gradle-wrapper.jar org.gradle.wrapper.GradleWrapperMain run --console=plain"
+
+[tasks."dev:frontend"]
+description = "Vite на http://localhost:5173 (проксирует /api на :8080)"
+dir = "frontend"
+run = "npm run dev"
+
+# ---------------------------------------------------------------------------
+# Агрегаты. Выполняются последовательно, падают на первой ошибке.
+# ---------------------------------------------------------------------------
+
+[tasks.drift]
+description = "Регенерирует контракт и SDK, падает при расхождении с закоммиченным"
+run = [
+  "mise run contract:build",
+  "mise run sdk:generate",
+  "git diff --exit-code -- contracts/openapi frontend/src/api/generated",
+]
+
+[tasks."check:fast"]
+description = "Быстрые проверки для pre-commit: линтеры, формат, типы (без сборки/тестов)"
+run = [
+  "mise run contract:format-check",
+  "mise run frontend:lint",
+  "mise run frontend:format-check",
+  "mise run frontend:typecheck",
+  "mise run backend:lint",
+]
+
+[tasks.check]
+description = "Все проверки (только репорт): контракт, дрифт SDK, бэкенд, фронтенд"
+run = [
+  "mise run contract:format-check",
+  "mise run contract:build",
+  "mise run sdk:generate",
+  "git diff --exit-code -- contracts/openapi frontend/src/api/generated",
+  "mise run backend:check",
+  "mise run frontend:lint",
+  "mise run frontend:format-check",
+  "mise run frontend:build",
+  "mise run frontend:test",
+]
+
+[tasks.fmt]
+description = "Автоисправление формата/линта (fix)"
+run = [
+  "mise run contract:format",
+  "mise run frontend:format",
+  "mise run frontend:lint-fix",
+  "mise run backend:format",
+]

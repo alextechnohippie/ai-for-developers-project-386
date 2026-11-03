@@ -1,0 +1,20 @@
+amends "package://github.com/jdx/hk/releases/download/v2.11.0/hk@2.11.0#/Config.pkl"
+import "package://github.com/jdx/hk/releases/download/v2.11.0/hk@2.11.0#/Builtins.pkl"
+
+hooks {
+  // Перед коммитом — быстрые проверки (линтеры, формат, типы; без сборки и тестов).
+  ["pre-commit"] {
+    steps {
+      ["checks"] {
+        check = "mise run check:fast"
+        exclusive = true
+      }
+    }
+  }
+  // Сообщение коммита должно быть в формате Conventional Commits.
+  ["commit-msg"] {
+    steps {
+      ["conventional"] = Builtins.check_conventional_commit
+    }
+  }
+}
