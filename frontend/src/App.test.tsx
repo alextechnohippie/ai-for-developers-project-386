@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
 
@@ -53,7 +53,8 @@ describe("Путь гостя", () => {
     render(<App />);
     expect(await screen.findByRole("heading", { name, level: 1 })).toBeDefined();
     expect(screen.getByText(duration)).toBeDefined();
-    expect(document.title).toContain(name);
+    // document.title выставляется эффектом после загрузки типов — ждём обновления.
+    await waitFor(() => expect(document.title).toContain(name));
   });
 
   it("позволяет вернуться с неизвестной ссылки", async () => {
