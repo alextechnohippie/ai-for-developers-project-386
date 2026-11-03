@@ -4,9 +4,10 @@ import App from "./App";
 
 // Юнит-тест изолирован от бэкенда: сгенерированный SDK замокан. Реальную
 // связь фронт→бэк через контракт проверяет браузерный e2e (тикет #12).
-const { listSlotsMock, createBookingMock } = vi.hoisted(() => ({
+const { listSlotsMock, createBookingMock, listBookingsMock } = vi.hoisted(() => ({
   listSlotsMock: vi.fn(),
   createBookingMock: vi.fn(),
+  listBookingsMock: vi.fn(),
 }));
 
 vi.mock("./api/generated", () => ({
@@ -30,6 +31,7 @@ vi.mock("./api/generated", () => ({
   ),
   listSlots: listSlotsMock,
   createBooking: createBookingMock,
+  listBookings: listBookingsMock,
 }));
 
 // 06:00Z / 06:30Z = 09:00 / 09:30 по Москве.
@@ -49,12 +51,14 @@ const BOOKING = {
 beforeEach(() => {
   listSlotsMock.mockResolvedValue({ data: SLOTS });
   createBookingMock.mockResolvedValue({ data: BOOKING });
+  listBookingsMock.mockResolvedValue({ data: [] });
 });
 
 afterEach(() => {
   cleanup();
   listSlotsMock.mockReset();
   createBookingMock.mockReset();
+  listBookingsMock.mockReset();
   window.history.replaceState(null, "", "/");
 });
 
@@ -153,5 +157,35 @@ describe("Путь гостя", () => {
     fireEvent.click(screen.getByRole("button", { name: "Записаться" }));
     expect(await screen.findByRole("alert")).toBeDefined();
     expect(screen.getByText(/уже занято/)).toBeDefined();
+  });
+
+  it("показывает владельцу список предстоящих встреч с типом, временем и именем", async () => {
+    listBookingsMock.mockResolvedValue({
+      data: [
+        {
+          id: "b1",
+          meetingTypeId: "consultation",
+          start: "2026-11-05T06:00:00Z",
+          end: "2026-11-05T06:30:00Z",
+          guestName: "Анна",
+        },
+        {
+          id: "b2",
+          meetingTypeId: "introduction",
+          start: "2026-11-05T07:00:00Z",
+          end: "2026-11-05T07:15:00Z",
+          guestName: "Борис",
+        },
+      ],
+    });
+    window.history.replaceState(null, "", "/#/owner");
+    render(<App />);
+    expect(
+      await screen.findByRole("heading", { name: "Предстоящие встречи", level: 1 }),
+    ).toBeDefined();
+    expect(screen.getByText("Консультация")).toBeDefined();
+    expect(screen.getByText("Анна")).toBeDefined();
+    expect(screen.getByText("Знакомство")).toBeDefined();
+    expect(screen.getByText("Борис")).toBeDefined();
   });
 });

@@ -3,6 +3,7 @@ import "./App.css";
 import {
   type Booking,
   createBooking,
+  listBookings,
   listMeetingTypes,
   listSlots,
   type MeetingType,
@@ -174,11 +175,66 @@ function BookingView({ meeting }: { meeting: MeetingType }) {
   );
 }
 
+function OwnerView({ meetingTypes }: { meetingTypes: MeetingType[] }) {
+  const heading = useRef<HTMLHeadingElement>(null);
+  const [bookings, setBookings] = useState<Booking[] | null>(null);
+
+  useEffect(() => {
+    heading.current?.focus();
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    listBookings().then(({ data }) => {
+      if (active && data) {
+        setBookings(data);
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  function titleFor(meetingTypeId: string): string {
+    return meetingTypes.find((type) => type.id === meetingTypeId)?.title ?? meetingTypeId;
+  }
+
+  return (
+    <main className="page booking-page">
+      <p className="eyebrow">Календарь звонков</p>
+      <section className="booking-card">
+        <h1 ref={heading} tabIndex={-1}>
+          Предстоящие встречи
+        </h1>
+        {bookings === null ? (
+          <p className="loading">Загружаем встречи…</p>
+        ) : bookings.length === 0 ? (
+          <p className="empty">Пока нет записей.</p>
+        ) : (
+          <ul className="owner-list">
+            {bookings.map((booking) => (
+              <li className="owner-item" key={booking.id}>
+                <span className="owner-time">{formatDateTime(booking.start)} МСК</span>
+                <span className="owner-type">{titleFor(booking.meetingTypeId)}</span>
+                <span className="owner-guest">{booking.guestName}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+        <a className="back-link" href="#/">
+          Вернуться на главную
+        </a>
+      </section>
+    </main>
+  );
+}
+
 function App() {
   const hash = useSyncExternalStore(subscribeToLocation, () => window.location.hash);
   const heading = useRef<HTMLHeadingElement>(null);
   const [meetingTypes, setMeetingTypes] = useState<MeetingType[] | null>(null);
   const isHome = hash === "" || hash === "#/";
+  const isOwner = hash === "#/owner";
   const isLoading = meetingTypes === null;
   const meeting = meetingTypes?.find((item) => hash === `#/book/${item.id}`);
 
@@ -197,11 +253,26 @@ function App() {
   useEffect(() => {
     document.title = isHome
       ? "Календарь звонков"
-      : `${meeting?.title ?? "Страница не найдена"} — Календарь звонков`;
-    if (isHome || !meeting) {
+      : isOwner
+        ? "Предстоящие встречи — Календарь звонков"
+        : `${meeting?.title ?? "Страница не найдена"} — Календарь звонков`;
+    if (isHome || (!isOwner && !meeting)) {
       heading.current?.focus();
     }
-  }, [hash, isHome, meeting]);
+  }, [hash, isHome, isOwner, meeting]);
+
+  if (isOwner) {
+    if (isLoading) {
+      return (
+        <main className="page booking-page">
+          <section className="booking-card">
+            <p className="loading">Загружаем встречи…</p>
+          </section>
+        </main>
+      );
+    }
+    return <OwnerView meetingTypes={meetingTypes} />;
+  }
 
   if (!isHome) {
     return (
@@ -258,6 +329,9 @@ function App() {
         )}
       </section>
       <p className="footnote">Выберите тип встречи, затем переходите к выбору времени.</p>
+      <a className="owner-link" href="#/owner">
+        Встречи владельца
+      </a>
     </main>
   );
 }

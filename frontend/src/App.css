@@ -169,6 +169,40 @@
   color: #c02626;
   font-weight: 500;
 }
+.owner-link {
+  display: inline-block;
+  margin-top: 16px;
+  color: #2457ce;
+  font-weight: 600;
+  text-underline-offset: 4px;
+}
+.owner-list {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.owner-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 16px;
+  padding: 14px 16px;
+  border: 1px solid #e6ebf3;
+  border-radius: 12px;
+}
+.owner-time {
+  font-weight: 600;
+  min-width: 170px;
+}
+.owner-type {
+  color: #2457ce;
+}
+.owner-guest {
+  color: #536079;
+}
 .confirmation {
   margin-top: 8px;
 }
