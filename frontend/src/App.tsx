@@ -1,20 +1,6 @@
-import { useEffect, useRef, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import "./App.css";
-
-const meetingTypes = [
-  {
-    id: "introduction",
-    name: "Знакомство",
-    duration: 15,
-    description: "Короткий звонок, чтобы обсудить ваш вопрос.",
-  },
-  {
-    id: "consultation",
-    name: "Консультация",
-    duration: 30,
-    description: "Подробный разговор по вашей задаче.",
-  },
-];
+import { listMeetingTypes, type MeetingType } from "./api/generated";
 
 function subscribeToLocation(onChange: () => void) {
   window.addEventListener("hashchange", onChange);
@@ -24,13 +10,27 @@ function subscribeToLocation(onChange: () => void) {
 function App() {
   const hash = useSyncExternalStore(subscribeToLocation, () => window.location.hash);
   const heading = useRef<HTMLHeadingElement>(null);
+  const [meetingTypes, setMeetingTypes] = useState<MeetingType[] | null>(null);
   const isHome = hash === "" || hash === "#/";
-  const meeting = meetingTypes.find((item) => hash === `#/book/${item.id}`);
+  const isLoading = meetingTypes === null;
+  const meeting = meetingTypes?.find((item) => hash === `#/book/${item.id}`);
+
+  useEffect(() => {
+    let active = true;
+    listMeetingTypes().then(({ data }) => {
+      if (active && data) {
+        setMeetingTypes(data);
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     document.title = isHome
       ? "Календарь звонков"
-      : `${meeting?.name ?? "Страница не найдена"} — Календарь звонков`;
+      : `${meeting?.title ?? "Страница не найдена"} — Календарь звонков`;
     heading.current?.focus();
   }, [hash, isHome, meeting]);
 
@@ -39,20 +39,26 @@ function App() {
       <main className="page booking-page">
         <p className="eyebrow">Календарь звонков</p>
         <section className="booking-card">
-          <h1 ref={heading} tabIndex={-1}>
-            {meeting?.name ?? "Страница не найдена"}
-          </h1>
-          {meeting ? (
-            <>
-              <p className="duration">{meeting.duration} минут</p>
-              <p className="placeholder-message">Онлайн-запись скоро появится</p>
-            </>
+          {isLoading ? (
+            <p className="loading">Загружаем типы встреч…</p>
           ) : (
-            <p>Проверьте ссылку или выберите тип встречи на главной.</p>
+            <>
+              <h1 ref={heading} tabIndex={-1}>
+                {meeting?.title ?? "Страница не найдена"}
+              </h1>
+              {meeting ? (
+                <>
+                  <p className="duration">{meeting.durationMinutes} минут</p>
+                  <p className="placeholder-message">Онлайн-запись скоро появится</p>
+                </>
+              ) : (
+                <p>Проверьте ссылку или выберите тип встречи на главной.</p>
+              )}
+              <a className="back-link" href="#/">
+                Вернуться на главную
+              </a>
+            </>
           )}
-          <a className="back-link" href="#/">
-            Вернуться на главную
-          </a>
         </section>
       </main>
     );
@@ -70,18 +76,22 @@ function App() {
         <h2 id="meeting-types-title" className="section-title">
           Выберите формат встречи
         </h2>
-        <div className="cards">
-          {meetingTypes.map((meeting) => (
-            <article className="card" key={meeting.id} aria-labelledby={`${meeting.id}-title`}>
-              <p className="duration">{meeting.duration} минут</p>
-              <h3 id={`${meeting.id}-title`}>{meeting.name}</h3>
-              <p className="description">{meeting.description}</p>
-              <a className="button" href={`#/book/${meeting.id}`}>
-                Выбрать время
-              </a>
-            </article>
-          ))}
-        </div>
+        {isLoading ? (
+          <p className="loading">Загружаем типы встреч…</p>
+        ) : (
+          <div className="cards">
+            {meetingTypes.map((item) => (
+              <article className="card" key={item.id} aria-labelledby={`${item.id}-title`}>
+                <p className="duration">{item.durationMinutes} минут</p>
+                <h3 id={`${item.id}-title`}>{item.title}</h3>
+                <p className="description">{item.description}</p>
+                <a className="button" href={`#/book/${item.id}`}>
+                  Выбрать время
+                </a>
+              </article>
+            ))}
+          </div>
+        )}
       </section>
       <p className="footnote">Выберите тип встречи, затем переходите к выбору времени.</p>
     </main>
