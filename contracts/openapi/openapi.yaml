@@ -4,6 +4,42 @@ info:
   version: 0.0.0
 tags: []
 paths:
+  /api/bookings:
+    post:
+      operationId: createBooking
+      description: Создать запись на свободный слот. Сервер проверяет легальность старта и конфликт.
+      parameters: []
+      responses:
+        '201':
+          description: The request has succeeded and a new resource has been created as a result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '409':
+          description: The request conflicts with the current state of the server.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBookingRequest'
   /api/health:
     get:
       operationId: getHealth
@@ -69,6 +105,51 @@ components:
           type: string
           description: Сообщение для показа гостю.
       description: 'Ошибка API: машинный код и человекочитаемое сообщение.'
+    Booking:
+      type: object
+      required:
+        - id
+        - meetingTypeId
+        - start
+        - end
+        - guestName
+      properties:
+        id:
+          type: string
+          description: Идентификатор записи.
+        meetingTypeId:
+          type: string
+          description: Тип встречи.
+        start:
+          type: string
+          format: date-time
+          description: Начало встречи (включительно), UTC.
+        end:
+          type: string
+          format: date-time
+          description: Конец встречи (исключительно), UTC; выводится как start + длительность типа.
+        guestName:
+          type: string
+          description: Имя гостя.
+      description: Запись гостя на встречу.
+    CreateBookingRequest:
+      type: object
+      required:
+        - meetingTypeId
+        - start
+        - guestName
+      properties:
+        meetingTypeId:
+          type: string
+          description: Тип встречи.
+        start:
+          type: string
+          format: date-time
+          description: Выбранный свободный старт, UTC.
+        guestName:
+          type: string
+          description: Имя гостя.
+      description: 'Запрос на создание записи: end выводит сервер из типа.'
     HealthResponse:
       type: object
       required:

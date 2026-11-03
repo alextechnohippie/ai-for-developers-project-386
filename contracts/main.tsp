@@ -44,6 +44,36 @@ model ApiError {
   message: string;
 }
 
+/** Запись гостя на встречу. */
+model Booking {
+  /** Идентификатор записи. */
+  id: string;
+
+  /** Тип встречи. */
+  meetingTypeId: string;
+
+  /** Начало встречи (включительно), UTC. */
+  start: utcDateTime;
+
+  /** Конец встречи (исключительно), UTC; выводится как start + длительность типа. */
+  end: utcDateTime;
+
+  /** Имя гостя. */
+  guestName: string;
+}
+
+/** Запрос на создание записи: end выводит сервер из типа. */
+model CreateBookingRequest {
+  /** Тип встречи. */
+  meetingTypeId: string;
+
+  /** Выбранный свободный старт, UTC. */
+  start: utcDateTime;
+
+  /** Имя гостя. */
+  guestName: string;
+}
+
 @get
 @route("/api/health")
 op getHealth(): HealthResponse;
@@ -63,5 +93,26 @@ op listSlots(@path meetingTypeId: string):
     }
   | {
       @statusCode statusCode: 404;
+      @body error: ApiError;
+    };
+
+/** Создать запись на свободный слот. Сервер проверяет легальность старта и конфликт. */
+@post
+@route("/api/bookings")
+op createBooking(@body request: CreateBookingRequest):
+  | {
+      @statusCode statusCode: 201;
+      @body booking: Booking;
+    }
+  | {
+      @statusCode statusCode: 400;
+      @body error: ApiError;
+    }
+  | {
+      @statusCode statusCode: 404;
+      @body error: ApiError;
+    }
+  | {
+      @statusCode statusCode: 409;
       @body error: ApiError;
     };

@@ -19,6 +19,50 @@ export type ApiError = {
 };
 
 /**
+ * Запись гостя на встречу.
+ */
+export type Booking = {
+    /**
+     * Идентификатор записи.
+     */
+    id: string;
+    /**
+     * Тип встречи.
+     */
+    meetingTypeId: string;
+    /**
+     * Начало встречи (включительно), UTC.
+     */
+    start: string;
+    /**
+     * Конец встречи (исключительно), UTC; выводится как start + длительность типа.
+     */
+    end: string;
+    /**
+     * Имя гостя.
+     */
+    guestName: string;
+};
+
+/**
+ * Запрос на создание записи: end выводит сервер из типа.
+ */
+export type CreateBookingRequest = {
+    /**
+     * Тип встречи.
+     */
+    meetingTypeId: string;
+    /**
+     * Выбранный свободный старт, UTC.
+     */
+    start: string;
+    /**
+     * Имя гостя.
+     */
+    guestName: string;
+};
+
+/**
  * Проверка живости сервиса.
  */
 export type HealthResponse = {
@@ -60,6 +104,39 @@ export type Slot = {
      */
     end: string;
 };
+
+export type CreateBookingData = {
+    body: CreateBookingRequest;
+    path?: never;
+    query?: never;
+    url: '/api/bookings';
+};
+
+export type CreateBookingErrors = {
+    /**
+     * The server could not understand the request due to invalid syntax.
+     */
+    400: ApiError;
+    /**
+     * The server cannot find the requested resource.
+     */
+    404: ApiError;
+    /**
+     * The request conflicts with the current state of the server.
+     */
+    409: ApiError;
+};
+
+export type CreateBookingError = CreateBookingErrors[keyof CreateBookingErrors];
+
+export type CreateBookingResponses = {
+    /**
+     * The request has succeeded and a new resource has been created as a result.
+     */
+    201: Booking;
+};
+
+export type CreateBookingResponse = CreateBookingResponses[keyof CreateBookingResponses];
 
 export type GetHealthData = {
     body?: never;
