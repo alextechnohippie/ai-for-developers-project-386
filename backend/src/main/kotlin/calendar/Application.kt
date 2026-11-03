@@ -25,6 +25,9 @@ fun Application.module() {
             get("/health") {
                 call.respond(HealthResponse(status = "ok"))
             }
+            get("/meeting-types") {
+                call.respond(seedMeetingTypes)
+            }
         }
     }
 }
