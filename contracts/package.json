@@ -1,0 +1,16 @@
+{
+  "name": "calendar-contracts",
+  "version": "0.0.1",
+  "private": true,
+  "description": "API-контракт (TypeSpec → OpenAPI) сервиса «Календарь звонков»",
+  "scripts": {
+    "build": "tsp compile .",
+    "format": "tsp format \"**/*.tsp\"",
+    "format:check": "tsp format --check \"**/*.tsp\""
+  },
+  "devDependencies": {
+    "@typespec/compiler": "1.17.0",
+    "@typespec/http": "1.17.0",
+    "@typespec/openapi3": "1.17.0"
+  }
+}
