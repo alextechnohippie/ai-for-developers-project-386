@@ -183,7 +183,8 @@ describe("Путь гостя", () => {
     expect(
       await screen.findByRole("heading", { name: "Предстоящие встречи", level: 1 }),
     ).toBeDefined();
-    expect(screen.getByText("Консультация")).toBeDefined();
+    // Список приходит из listBookings асинхронно — ждём появления содержимого.
+    expect(await screen.findByText("Консультация")).toBeDefined();
     expect(screen.getByText("Анна")).toBeDefined();
     expect(screen.getByText("Знакомство")).toBeDefined();
     expect(screen.getByText("Борис")).toBeDefined();
