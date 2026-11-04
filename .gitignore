@@ -5,3 +5,9 @@
 # Собранный фронтенд, который кладётся в бэкенд при сборке Docker-образа.
 # В репозитории не хранится — наполняется из frontend/dist во время сборки.
 backend/src/main/resources/static/
+
+# Секреты окружения (напр. RENDER_API_KEY для не-OAuth варианта MCP) — не коммитим.
+.env
+.env.*
+!.env.example
+*.local.json
