@@ -21,6 +21,10 @@ data class Interval(val start: Instant, val end: Instant)
 fun intervalsOverlap(aStart: Instant, aEnd: Instant, bStart: Instant, bEnd: Instant): Boolean =
     aStart.isBefore(bEnd) && bStart.isBefore(aEnd)
 
+/** Пересекаются ли два интервала (полуоткрытые, примыкание — не пересечение). */
+fun intervalsOverlap(a: Interval, b: Interval): Boolean =
+    intervalsOverlap(a.start, a.end, b.start, b.end)
+
 /** Форматирует момент времени в ISO-8601 UTC (например, 2026-11-05T06:00:00Z). */
 fun toIsoInstant(instant: Instant): String = DateTimeFormatter.ISO_INSTANT.format(instant)
 

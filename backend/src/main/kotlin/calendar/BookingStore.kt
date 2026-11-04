@@ -2,7 +2,6 @@ package calendar
 
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import java.time.Instant
 
 /**
  * In-memory хранилище записей (ADR-0002): интервалы [start, end) в одной коллекции,
@@ -16,7 +15,7 @@ class BookingStore {
 
     /** Снимок занятых интервалов для генерации свободных слотов. */
     suspend fun occupiedIntervals(): List<Interval> = mutex.withLock {
-        bookings.map { Interval(Instant.parse(it.start), Instant.parse(it.end)) }
+        bookings.map { it.toInterval() }
     }
 
     /** Все записи, отсортированные по времени начала (ISO-8601 UTC сортируется как хронология). */
@@ -29,11 +28,8 @@ class BookingStore {
      * создана, и `false`, если интервал пересекается с уже существующей бронью любого типа.
      */
     suspend fun add(booking: Booking): Boolean = mutex.withLock {
-        val start = Instant.parse(booking.start)
-        val end = Instant.parse(booking.end)
-        val conflict = bookings.any { existing ->
-            intervalsOverlap(start, end, Instant.parse(existing.start), Instant.parse(existing.end))
-        }
+        val interval = booking.toInterval()
+        val conflict = bookings.any { intervalsOverlap(interval, it.toInterval()) }
         if (conflict) {
             false
         } else {

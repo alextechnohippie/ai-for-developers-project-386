@@ -52,14 +52,14 @@ private fun Route.calendarRoutes(clock: Clock, store: BookingStore) {
     }
 }
 
+private fun meetingTypeNotFound(meetingTypeId: String?): ApiError =
+    ApiError(code = "MEETING_TYPE_NOT_FOUND", message = "Тип встречи не найден: $meetingTypeId")
+
 private suspend fun RoutingContext.respondSlots(clock: Clock, store: BookingStore) {
     val meetingTypeId = call.parameters["meetingTypeId"]
     val meetingType = seedMeetingTypes.find { it.id == meetingTypeId }
     if (meetingType == null) {
-        call.respond(
-            HttpStatusCode.NotFound,
-            ApiError(code = "MEETING_TYPE_NOT_FOUND", message = "Тип встречи не найден: $meetingTypeId"),
-        )
+        call.respond(HttpStatusCode.NotFound, meetingTypeNotFound(meetingTypeId))
         return
     }
     val slots = Slots.available(
@@ -77,10 +77,7 @@ private suspend fun RoutingContext.respondBooking(clock: Clock, store: BookingSt
         is BookingResult.Created -> call.respond(HttpStatusCode.Created, result.booking)
         BookingResult.UnknownType -> call.respond(
             HttpStatusCode.NotFound,
-            ApiError(
-                code = "MEETING_TYPE_NOT_FOUND",
-                message = "Тип встречи не найден: ${request.meetingTypeId}",
-            ),
+            meetingTypeNotFound(request.meetingTypeId),
         )
         is BookingResult.Invalid -> call.respond(
             HttpStatusCode.BadRequest,
