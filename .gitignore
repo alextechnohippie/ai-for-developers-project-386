@@ -1,3 +1,7 @@
 # Локальные настройки Claude Code (персональные разрешения) — не коммитим.
 # Скиллы (.claude/skills/) и skills-lock.json, наоборот, коммитим.
 .claude/settings.local.json
+
+# Собранный фронтенд, который кладётся в бэкенд при сборке Docker-образа.
+# В репозитории не хранится — наполняется из frontend/dist во время сборки.
+backend/src/main/resources/static/

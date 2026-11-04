@@ -5,6 +5,7 @@ import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.engine.embeddedServer
+import io.ktor.server.http.content.staticResources
 import io.ktor.server.netty.Netty
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.request.receive
@@ -17,8 +18,12 @@ import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import java.time.Clock
 
+/** Порт по умолчанию для локальной разработки; в контейнере переопределяется переменной PORT. */
+private const val DEFAULT_PORT = 8080
+
 fun main() {
-    embeddedServer(Netty, port = 8080, host = "0.0.0.0", module = Application::module)
+    val port = System.getenv("PORT")?.toIntOrNull() ?: DEFAULT_PORT
+    embeddedServer(Netty, port = port, host = "0.0.0.0", module = Application::module)
         .start(wait = true)
 }
 
@@ -31,6 +36,9 @@ fun Application.module(clock: Clock = Clock.systemUTC()) {
         route("/api") {
             calendarRoutes(clock, bookingStore)
         }
+        // Собранный фронтенд (SPA) кладётся в resources/static при сборке образа и
+        // отдаётся тем же сервисом; маршрут /api более специфичен и имеет приоритет.
+        staticResources("/", "static")
     }
 }
 
