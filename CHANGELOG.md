@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/alextechnohippie/ai-for-developers-project-386/compare/v1.0.0...v1.1.0) (2026-11-05)
+
+
+### Features
+
+* serve built frontend and read PORT from env ([6725ab2](https://github.com/alextechnohippie/ai-for-developers-project-386/commit/6725ab206b47e0e7e33f6ade8a219507e6c27040))
+
 ## 1.0.0 (2026-11-04)
 
 
