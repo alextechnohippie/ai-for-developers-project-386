@@ -1,0 +1,24 @@
+# Артефакты сборки и зависимости — ставятся/генерируются внутри образа.
+**/node_modules
+**/build
+**/dist
+backend/.gradle
+backend/src/main/resources/static
+
+# VCS и агентское окружение.
+.git
+.github
+.claude
+.agents
+.release-please-manifest.json
+release-please-config.json
+
+# Тесты e2e и контракты (в рантайм-образ не нужны).
+e2e
+contracts
+
+# Документация и прочее.
+*.md
+docs
+skills-lock.json
+hk.pkl
