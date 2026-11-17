@@ -10,17 +10,18 @@
 | Команда | Что делает |
 |---|---|
 | `mise install` | Ставит закреплённые инструменты (Java 21, Node 24, hk) |
-| `mise run install` | Ставит npm-зависимости (contracts, frontend) |
-| `mise run check` | Все проверки: контракт, дрифт SDK, detekt+тесты бэка, lint/format/build/test фронта |
+| `mise run install` | Ставит зависимости (contracts, frontend, e2e) и браузер Chromium для Playwright |
+| `mise run check` | **Все проверки одной командой**: контракт, дрифт SDK, detekt+тесты бэка, lint/format/build/test фронта и браузерный e2e на живом сервере |
 | `mise run check:fast` | Быстрые проверки (линт/формат/типы) — используется в pre-commit |
 | `mise run fmt` | Автоисправление формата и линта |
 | `mise run dev:backend` | Ktor на http://localhost:8080 |
 | `mise run dev:frontend` | Vite на http://localhost:5173 (проксирует `/api` на :8080) |
-| `mise run e2e` | Браузерный e2e (Playwright) на живом стеке; **не входит** в `check` |
-| `mise run e2e:install` | Зависимости e2e; браузер — `cd e2e && npx playwright install chromium` |
+| `mise run e2e` | Только браузерный e2e (Playwright): сборка фронта + прогон на живом стеке (Ktor + `vite preview`) |
+| `mise run e2e:install` | Зависимости e2e и браузер Chromium (уже входит в `mise run install`) |
 
-CI (`.github/workflows/ci.yml`) на каждый push выполняет `mise run install` + `mise run check`
-(job `check`) и отдельным job `e2e` — браузерный сценарий на живом стеке.
+CI (`.github/workflows/ci.yml`) на каждый push выполняет ту же команду, что и локально:
+`mise run install` + `mise run check` (один job `check`; на Ubuntu дополнительно ставятся
+системные библиотеки браузера `npx playwright install-deps chromium`).
 
 ## Устройство
 

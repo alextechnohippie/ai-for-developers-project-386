@@ -22,10 +22,11 @@ dir = "frontend"
 run = "npm ci"
 
 [tasks.install]
-description = "Устанавливает npm-зависимости (contracts, frontend)"
+description = "Устанавливает зависимости (contracts, frontend, e2e + браузер Chromium)"
 run = [
   "mise run contract:install",
   "mise run frontend:install",
+  "mise run e2e:install",
 ]
 
 # ---------------------------------------------------------------------------
@@ -139,7 +140,7 @@ run = [
 ]
 
 [tasks.check]
-description = "Все проверки (только репорт): контракт, дрифт SDK, бэкенд, фронтенд"
+description = "Все проверки (только репорт): контракт, дрифт SDK, бэкенд, фронтенд, браузерный e2e"
 run = [
   "mise run contract:format-check",
   "mise run contract:build",
@@ -150,6 +151,7 @@ run = [
   "mise run frontend:format-check",
   "mise run frontend:build",
   "mise run frontend:test",
+  "mise run e2e:run",
 ]
 
 [tasks.fmt]
@@ -162,18 +164,26 @@ run = [
 ]
 
 # ---------------------------------------------------------------------------
-# Браузерный e2e (Playwright). Отдельно от check — поднимает живой стек.
+# Браузерный e2e (Playwright) на живом стеке: Ktor + собранный фронт, без моков API.
+# Входит в mise run check последним шагом (после frontend:build).
 # ---------------------------------------------------------------------------
 
 [tasks."e2e:install"]
-description = "Ставит зависимости e2e (Playwright). Браузер: npx playwright install chromium"
-dir = "e2e"
-run = "npm ci"
-
-[tasks.e2e]
-description = "Браузерный e2e на живом стеке (Ktor + собранный фронт). НЕ входит в mise run check"
+description = "Ставит зависимости e2e (Playwright) и браузер Chromium"
 dir = "e2e"
 run = [
+  "npm ci",
+  "npx playwright install chromium",
+]
+
+[tasks."e2e:run"]
+description = "Только прогон Playwright (фронт должен быть уже собран)"
+dir = "e2e"
+run = "npx playwright test"
+
+[tasks.e2e]
+description = "Браузерный e2e отдельно: сборка фронта + прогон Playwright"
+run = [
   "mise run frontend:build",
-  "npx playwright test",
+  "mise run e2e:run",
 ]

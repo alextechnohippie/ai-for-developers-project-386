@@ -35,7 +35,7 @@
 git clone https://github.com/alextechnohippie/ai-for-developers-project-386.git
 cd ai-for-developers-project-386
 mise install        # инструменты (Java, Node, hk)
-mise run install    # npm-зависимости
+mise run install    # npm-зависимости и браузер для e2e
 ```
 
 ## Использование
@@ -43,7 +43,7 @@ mise run install    # npm-зависимости
 ```bash
 mise run dev:backend    # Ktor на http://localhost:8080
 mise run dev:frontend   # Vite на http://localhost:5173 (проксирует /api)
-mise run check          # все проверки (линт, типы, тесты, сборка)
+mise run check          # все проверки (линт, типы, тесты, сборка, браузерный e2e)
 ```
 
 Рабочие команды и правила проекта — в [AGENTS.md](AGENTS.md).
